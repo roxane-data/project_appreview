@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Too good to go - UX analysis</title>
+    </head>
+    <body>
+      <div class="jumbotron">
+        <h1>Customers feedback estimator</h1>
+        <p class="lead">Type down your comment to predict the rating !</p>
+        <!-- <p><a class="btn btn-lg btn-success" href="home" role="button">Get started</a></p> -->
+      </div>
+      <form action="/predict/" method="post">
+        <div class="form-row">
+          <div class="form-group col-md-6">
+            <label for="comment">feedback</label>
+            <input type="string" step="0.01" class="form-control" id="feedback" name="feedback" placeholder="Enter text">
+			    </div>
+          <button type="submit" class="btn btn-primary">Predict</button>
+        </div>
+      </form>
+
+    </body>
+</html>
