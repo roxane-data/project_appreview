@@ -9,6 +9,9 @@ app = Flask(__name__)
 def rating_index():
     return render_template('index.html')
 
+@app.route('/dataviz/', methods=['GET'])
+def viz_index():
+    return render_template('lda1.html')
 
 @app.route('/predict/', methods=['POST'])
 def result():
