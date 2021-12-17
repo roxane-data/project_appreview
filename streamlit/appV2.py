@@ -21,7 +21,7 @@ from gensim.models import LdaModel
 import pyLDAvis
 from pyLDAvis import gensim
 from streamlit import components
-
+import os
 import pickle
 from wordcloud import WordCloud
 from PIL import Image
@@ -30,49 +30,20 @@ import PIL
 
 st.set_page_config(layout='wide')
 
-st.header("Tweet Scorer")
-st.sidebar.markdown("*Last update: 11/12/2021*")
-st.sidebar.markdown("---")
-st.sidebar.slider('Slide', min_value=3, max_value=12)
-#st.sidebar.header("Ressources utiles")
-#st.sidebar.markdown("Numéro d'urgence 1: **78 172 10 81**")
-# I. Dataframe
-df = "../data/reviews_tgtg.pkl" #path to be written
-with open(df, 'rb') as f:
-  df = pickle.load(f)
-# II. Summary of the number of cases
 
-with st.form('my_form'): #reduire la taille en centrant
-    st.text_input('Type and test your tweet review')
+# Part 0 => Dataframe
 
-    uploaded_file = st.file_uploader('Or choose a file', type=["csv","txt"])
-    if uploaded_file is not None:
-        file = pd.read_csv(uploaded_file)
-        prepro_file = preprocessing(file.iloc[:,0])
-        #predictions =
+ORIGINAL_DF_PATH = "../data/reviews_tgtg.pkl"
+PROCESSED_DF_PATH = "../data/reviews_tgtg_processed.pkl"
 
-    button = st.form_submit_button('Predict')
-    #if button:
-        #st.st.markdown("""# Sentiment Analyzer {value_predict} :star: """)
-        #st.metric(....)
+def get_data(path):
+    with open(path, 'rb') as f:
+        df = pickle.load(f)
+    return df
 
-st.markdown('### Estimator result : ')
-st.container()
-
-st.markdown("---")
-col1,col2 = st.columns(2)
-with col1:
-    st.metric(label="% Total review", value="~")
-    st.metric(label="Avg Score", value="~")
-with col2:
-    st.subheader("Reviews Distribution per Rating")
-    plt.figure(figsize=(24,16))
-    sns.set_theme(style="whitegrid")
-    sns.countplot(x='rating', data=df)
-    plt.title('Reviews Distribution per Rating')
-    st.pyplot(plt)
-# III. Interactive map
-st.markdown("---")
+def save_data(path):
+    with open(path, 'wb') as f:
+        pickle.dump(unprocessed_df, f)
 
 def preprocessing(text):
     text=text.lower()
@@ -83,8 +54,77 @@ def preprocessing(text):
     stemmer = PorterStemmer()
     token_stem = [stemmer.stem(t) for t in tokens_no_stop]
     return token_stem
-# preprocessing applied on the column concerned + output stored in new column
-df['preprocessed_review']= df['review_content'].apply(preprocessing)
+
+preprocess_button = st.button('Preprocess')
+if preprocess_button:
+    unprocessed_df = get_data(ORIGINAL_DF_PATH)
+    unprocessed_df['preprocessed_review'] = unprocessed_df['review_content'].apply(preprocessing)
+    save_data(PROCESSED_DF_PATH)
+
+if not os.path.isfile(PROCESSED_DF_PATH):
+    st.warning("Please preprocess the reviews !")
+    st.stop()
+
+df = get_data(PROCESSED_DF_PATH)
+
+
+
+channels = df['source'].drop_duplicates()
+make_choice = st.sidebar.selectbox('Select the channel:', channels)
+period = df['date'].loc[df["source"] == make_choice]
+period_choice = st.sidebar.selectbox('', period)
+rating = df['rating'].loc[df["source"] == make_choice]
+rating_choice = st.sidebar.selectbox('', rating)
+
+st.sidebar.markdown("*Last update: 11/12/2021*")
+st.sidebar.markdown("---")
+#st.sidebar.slider('Slide', min_value=3, max_value=12)
+
+
+
+
+# Part 1 => Tweet scoring estimator based on classification
+st.markdown("# Tweet Scorer")
+
+# tweet to be typed down or downloaded
+with st.form('my_form'): #reduire la taille en centrant
+    st.markdown('### Type and test your tweet')
+    st.text_input('Write a review in the field below')
+
+    uploaded_file = st.file_uploader('Or choose a file', type=["csv","txt"])
+    if uploaded_file is not None:
+        file = pd.read_csv(uploaded_file)
+        prepro_file = preprocessing(file.iloc[:,0])
+        #predictions =
+
+    button = st.form_submit_button('Predict')
+    #if button:
+        #st.st.markdown("""# Sentiment Analyzer {value_predict} :star: """)
+        #st.me
+
+st.markdown('### Estimated score : ')
+
+st.markdown("---")
+
+
+# Part 2 => Data viz
+st.markdown("# Data viz")
+
+# channel name depending on the channel selected in the sidebar
+st.markdown("## Channel selected")
+col1,col2 = st.columns(2)
+with col1:
+    st.metric(label="% Total review", value="~") # metric 1 of the channel selected
+    st.metric(label="Avg Score", value="~") # metric 2 of the channel selected
+
+with col2:
+    st.subheader("Reviews Distribution per Rating") # distribution chart of the channel selected
+    plt.figure(figsize=(24,16))
+    sns.set_theme(style="whitegrid")
+    sns.countplot(x='rating', data=df)
+    st.pyplot(plt)
+
+st.markdown("---")
 
 
 
@@ -102,33 +142,47 @@ def wordcloud(text):
     return img
 
 # calling the function to create the word cloud
-img = wordcloud(df['preprocessed_review'])
-st.success(
-    "Word Cloud"
-)
-st.image(img)
+button = st.button('show wordcloud')
+if button:
+    img = wordcloud(df['preprocessed_review'])
+    st.success(
+        "Word Cloud"
+    )
+    st.image(img)
 
 st.markdown("---")
 
-# Create a corpus
-corpus = df['preprocessed_review']
-# Compute the dictionary: this is a dictionary mapping words and their corresponding numbers for later visualisation
-id2word = Dictionary(corpus)
-# Create a BOW
-bow = [id2word.doc2bow(line) for line in corpus]  # convert corpus to BoW format
-# Instanciate a TF-IDF
-tfidf_model = TfidfModel(bow)
-# Compute the TF-IDF
-tf_idf_gensim = tfidf_model[bow]
-# compute LDA
-lda1 = LdaModel(corpus=tf_idf_gensim, num_topics=4, id2word=id2word, passes=10, random_state=0)
-# Visualize the different topics
-vis = pyLDAvis.gensim.prepare(topic_model=lda1, corpus=bow, dictionary=id2word)
-html_string = pyLDAvis.prepared_data_to_html(vis)
-#from streamlit import components
-st.success(
-    "Main trend topics"
-)
-#@st.cache
-def
-components.v1.html(html_string, width=1300, height=800)
+
+
+
+# creating room for pyLDAvis
+@st.cache # to save time
+
+# 2 functions to create pyLDAvis chart into html format and display it
+
+def pyLDAvis_get(number): # to create pylDavis and define the nb of topics to show
+    # Create a corpus
+    corpus = df['preprocessed_review']
+    # Compute the dictionary: this is a dictionary mapping words and their corresponding numbers for later visualisation
+    id2word = Dictionary(corpus)
+    # Create a BOW
+    bow = [id2word.doc2bow(line) for line in corpus]  # convert corpus to BoW format
+    # Instanciate a TF-IDF
+    tfidf_model = TfidfModel(bow)
+    # Compute the TF-IDF
+    tf_idf_gensim = tfidf_model[bow]
+    # compute LDA according to nb of topics selected
+    lda1 = LdaModel(corpus=tf_idf_gensim, num_topics=number, id2word=id2word, passes=10, random_state=0)
+    # Visualize the different topics
+    vis = pyLDAvis.gensim.prepare(topic_model=lda1, corpus=bow, dictionary=id2word)
+    html_string = pyLDAvis.prepared_data_to_html(vis) #to convert vis inot html format to display in streamlit
+    return html_string
+
+ #to display pyLDAvis chart
+button = st.button('More data viz...')
+if button:
+    input = st.number_input(label = 'Type down the number of topics you would like to look @', min_value=2) #to get nb of topics to display on chart
+    st.success(
+            "Main trend topics"
+        )
+    components.v1.html(pyLDAvis_get(input), width=1300, height=800)
