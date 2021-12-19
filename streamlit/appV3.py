@@ -33,7 +33,7 @@ st.set_page_config(layout='wide')
 
 # Part 0 => Dataframe
 
-ORIGINAL_DF_PATH = "../data/reviews_tgtg.pkl"
+ORIGINAL_DF_PATH = "../data/reviews_tgtg_v2.pkl"
 PROCESSED_DF_PATH = "../data/reviews_tgtg_processed.pkl"
 
 def get_data(path):
@@ -71,9 +71,9 @@ df = get_data(PROCESSED_DF_PATH)
 
 channels = df['source'].drop_duplicates()
 make_choice = st.sidebar.selectbox('Select channel:', channels)
-period = df['date'].loc[df["source"] == make_choice]
+period = df['date'].loc[df["source"] == make_choice].drop_duplicates()
 period_choice = st.sidebar.selectbox('Select time range', period)
-rating = df['rating'].loc[(df["source"] == make_choice) & (df["date"] == period_choice)]
+rating = df['rating'].loc[(df["source"] == make_choice) & (df["date"] == period_choice)].drop_duplicates()
 rating_choice = st.sidebar.selectbox('Select rating', rating)
 
 st.sidebar.markdown("*Last update: 11/12/2021*")
@@ -111,12 +111,16 @@ st.markdown("---")
 st.markdown("# Data viz")
 
 # channel name depending on the channel selected in the sidebar
-st.markdown("## Channel selected")
+st.markdown(f'## Channel select :{make_choice}')
+
+# Section 1 with data combining source and time range (all ratings)
 time_source_df = df.loc[(df["source"] == make_choice) & (df["date"] == period_choice)]
+
 col1,col2 = st.columns(2)
 with col1:
-    st.metric(label="% Total review", value="'{}'".format(time_source_df['source']/len(df)*100)) # metric 1 of the channel selected
-    st.metric(label="Avg Score", value="'{}'".format(time_source_df['rating'].mean()))# metric 2 of the channel selected
+    st.text('')
+    st.metric(label="% Total review", value=(round((len(time_source_df['source'])/len(df)*100),1))) #"'{}'".format(time_source_df['source']/len(df)*100))# metric 1 of the channel selected
+    st.metric(label="Avg Score", value=round(time_source_df['rating'].mean(),1))# metric 2 of the channel selected
 
 with col2:
     st.subheader("Reviews Distribution per Rating") # distribution chart of the channel selected
@@ -128,23 +132,24 @@ with col2:
 st.markdown("---")
 
 
+# Section 2 with data combining source and time range, and possible to drill down to each rate level
+time_source_rating_df = df.loc[(df["source"] == make_choice) & (df["date"] == period_choice) & (df["rating"] == rating_choice)]
 
 def wordcloud(text):
-
     text =' '.join([str(item) for item in text])
-    wordcloud_words = " ".join(text)
     wordcloud = WordCloud(
-        height=300, width=500, background_color="black", random_state=100,
-    ).generate(wordcloud_words)
+        height=300, width=500, background_color="white", random_state=100,
+    ).generate(text)
     plt.imshow(wordcloud, interpolation="bilinear")
     plt.axis("off")
     plt.savefig("cloud.jpg")
     img = Image.open("cloud.jpg")
     return img
 
+
 # calling the function to create the word cloud
 st.subheader('Wordcloud')
-img = wordcloud(df['preprocessed_review'])
+img = wordcloud(time_source_rating_df['preprocessed_review'])
 st.image(img)
 st.markdown("---")
 
@@ -158,7 +163,7 @@ st.markdown("---")
 
 def pyLDAvis_get(number): # to create pylDavis and define the nb of topics to show
     # Create a corpus
-    corpus = df['preprocessed_review']
+    corpus = time_source_rating_df['preprocessed_review']
     # Compute the dictionary: this is a dictionary mapping words and their corresponding numbers for later visualisation
     id2word = Dictionary(corpus)
     # Create a BOW
