@@ -209,7 +209,6 @@ with col2: # 1 metric calculated @rating level
 # Wordcloud
 def wordcloud(text):
     text =' '.join([str(item) for item in text])
-    #wordcloud_words = " ".join(text)
     wordcloud = WordCloud(
         height=300, width=500, background_color="white", random_state=100,
     ).generate(text)
