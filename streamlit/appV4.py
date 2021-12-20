@@ -47,6 +47,8 @@ def save_data(path):
     with open(path, 'wb') as f:
         pickle.dump(unprocessed_df, f)
 
+
+
 def preprocessing(text):
     text=text.lower()
     tokens = word_tokenize(text)
@@ -70,8 +72,9 @@ if not os.path.isfile(PROCESSED_DF_PATH):
 df = get_data(PROCESSED_DF_PATH)
 
 
-
+st.sidebar.markdown(f"### *Today: {datetime.date.today()}*")
 st.sidebar.markdown("*Last update: 11/12/2021*")
+
 st.sidebar.markdown("---")
 
 
@@ -112,15 +115,24 @@ st.markdown("# Data visualisation & Analysis")
 ## Section A => general overview across all channels
 
 # time range scope selection in sidebar
-periods = df['date'].drop_duplicates()
-period_choice = st.sidebar.selectbox('Select time range: ', periods)
+period_choice = st.sidebar.number_input(label = "Enter how many months you want to look back: ",step=1, min_value=3)
 st.sidebar.markdown("---")
 
+
+
+def filter_timerange(int):
+    new_df= df[df['date']>(datetime.date.today()-pd.DateOffset(months=int))]
+    return new_df
+
+
+print(df['date'].dtype)
+
 st.markdown(f'## Customers feedback overview across all channels')
-st.markdown(f'### Period selected : {period_choice}')
+st.markdown(f'### Period selected : last {period_choice} months')
 
 # define the dataframe with the specific time range selected
-time_df = df.loc[df['date'] == period_choice]
+time_df = filter_timerange(period_choice)
+
 
 # 2 metrics calculated @channel level
 col1, col2 = st.columns(2)
