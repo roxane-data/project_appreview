@@ -19,7 +19,7 @@ from gensim.models import LsiModel
 from pprint import pprint
 from gensim.models import LdaModel
 import pyLDAvis
-from pyLDAvis import gensim
+#from pyLDAvis import gensim
 from streamlit import components
 import os
 import pickle
