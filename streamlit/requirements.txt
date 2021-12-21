@@ -10,3 +10,4 @@ gensim
 pyLDAvis
 wordcloud
 opencv-python-headless==4.5.3.56
+pickleshare==0.7.4
