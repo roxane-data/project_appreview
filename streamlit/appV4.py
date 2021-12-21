@@ -40,8 +40,8 @@ PROCESSED_DF_PATH = "streamlit/reviews_tgtg_processed.pkl"
 
 def get_data(path):
     with open(path, 'rb') as f:
-        #df = pickle.Unpickler(f)
-        df = pickle.load(f)
+        unpkl = pickle.Unpickler(f)
+        df = unpkl.load(f)
     return df
 
 def save_data(path):
