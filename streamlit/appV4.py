@@ -46,8 +46,9 @@ def get_data(path):
 
 def save_data(path):
     with open(path, 'wb') as f:
-        pickle.Pickler(unprocessed_df, f,protocol=4)
+        unprocessed_df = pickle.Pickler(f,protocol=4)
         #pickle.dump(unprocessed_df, f)
+        return unprocessed_df
 
 
 
