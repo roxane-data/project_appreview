@@ -35,8 +35,8 @@ import PIL
 st.set_page_config(layout='wide')
 
 ## Dataframe loading
-ORIGINAL_DF_PATH = "../data/reviews_tgtg_v2.pkl"
-PROCESSED_DF_PATH = "../data/reviews_tgtg_processed.pkl"
+ORIGINAL_DF_PATH = "reviews_tgtg_v2.pkl"
+PROCESSED_DF_PATH = "reviews_tgtg_processed.pkl"
 
 def get_data(path):
     with open(path, 'rb') as f:
