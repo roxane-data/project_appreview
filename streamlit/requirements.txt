@@ -9,3 +9,4 @@ nltk
 gensim
 pyLDAvis
 wordcloud
+opencv-python-headless
