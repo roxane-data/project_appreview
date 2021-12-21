@@ -35,7 +35,7 @@ import PIL
 st.set_page_config(layout='wide')
 
 ## Dataframe loading
-ORIGINAL_DF_PATH = "streamlit/reviews_tgtg_v2.pkl"
+ORIGINAL_DF_PATH = "streamlit/reviews_tgtg_v3.pkl"
 PROCESSED_DF_PATH = "streamlit/reviews_tgtg_processed.pkl"
 
 def get_data(path):
@@ -49,7 +49,7 @@ def save_data(path):
         pkl = pickle.Pickler(f,protocol=4)
         pkl.dump(unprocessed_df)
         #pickle.dump(unprocessed_df, f)
-    
+
 
 
 
