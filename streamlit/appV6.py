@@ -134,8 +134,9 @@ with st.form('my_form'): #reduire la taille en centrant
         #predictions =
 
     button = st.form_submit_button('Predict')
-    st.text(clf.predict(count_vect.transform([preprocessing(tweet_test)])))
+
     if button:
+        st.text(clf.predict(count_vect.transform([preprocessing(tweet_test)])))
         #estimation_rating =
     #TO BE REMOVED => if button:
         #st.st.markdown("""# Sentiment Analyzer {value_predict} :star: """)
